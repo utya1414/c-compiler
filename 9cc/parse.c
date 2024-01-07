@@ -75,6 +75,14 @@ bool startswith(char *p, char *q) {
     return memcmp(p, q, strlen(q)) == 0;
 }
 
+bool isidentfirst(char p) {
+    return ('a' <= p && p <= 'z') || ('A' <= p && p <= 'Z') || p == '_';
+}
+
+bool isidentrest(char p) {
+    return isidentfirst(p) || ('0' <= p && p <= '9');
+}
+
 Token *tokenize() {
     char *p = user_input;
     Token head;
@@ -99,8 +107,12 @@ Token *tokenize() {
             continue;
         }
 
-        if ('a' <= *p && *p <= 'z') {
-            cur = new_token(TK_IDENT, cur, p++, 1);
+        if (isidentfirst(*p)) {
+            char *start = p;
+            do {
+                p++;
+            } while(isidentrest(*p));
+            cur = new_token(TK_IDENT, cur, start, p - start);
             continue;
         }
 
@@ -140,6 +152,15 @@ Node *new_num(int val) {
     Node *node = new_node(ND_NUM);
     node->val = val;
     return node;
+}
+
+LVar *find_lvar(Token *tok) {
+    for (LVar *var = locals; var; var = var->next) {
+        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) {
+            return var;
+        }
+    }
+    return NULL;
 }
 
 // program    = stmt*
@@ -221,7 +242,7 @@ Node *add() {
     }
 }
 
-// mul        = unary ("*" unary | "/" unary)*
+// mul        = unary ("*" unary | "/" unary)*F
 Node *mul() {
     Node *node = unary();
 
@@ -259,7 +280,23 @@ Node *primary() {
     if (tok) {
         Node *node = calloc(1, sizeof(Node));
         node->kind = ND_LVAR;
-        node->offset = (tok->str[0] - 'a' + 1) * 8;
+
+        LVar *lvar = find_lvar(tok);
+        if (lvar) {
+            node->offset = lvar->offset;
+        } else {
+            lvar = calloc(1, sizeof(LVar));
+            lvar->next = locals;
+            lvar->name = tok->str;
+            lvar->len = tok->len;
+            if (locals) {
+                lvar->offset = locals->offset + 8;
+            } else {
+                lvar->offset = 8;
+            }
+            node->offset = lvar->offset;
+            locals = lvar;
+        }
         return node;
     }
     return new_num(expect_number());

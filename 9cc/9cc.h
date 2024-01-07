@@ -26,6 +26,19 @@ struct Token {
     int len;
 };
 
+// local variable
+typedef struct LVar LVar;
+
+struct LVar {
+    LVar *next;
+    char *name;
+    int len;
+    int offset;
+};
+
+extern LVar *locals;
+
+// node kind
 typedef enum {
     ND_ADD, // +
     ND_SUB, // -
@@ -63,6 +76,8 @@ bool at_eof();
 
 Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 bool startswith(char *p, char *q);
+bool isidentfirst(char p);
+bool isidentrest(char p);
 Token *tokenize();
 
 //
@@ -72,6 +87,7 @@ Token *tokenize();
 Node *new_node(NodeKind kind);
 Node *new_binary(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_num(int val);
+LVar *find_lvar(Token *tok);
 
 extern Node *code[];
 
