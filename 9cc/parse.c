@@ -121,6 +121,12 @@ Token *tokenize() {
             continue;
         }
         
+        if (startswith(p, "for")) {
+            cur = new_token(TK_KEYWORD, cur, p, 3);
+            p += 3;
+            continue;
+        }
+
         if (isidentfirst(*p)) {
             char *start = p;
             do {
@@ -245,6 +251,24 @@ Node *stmt() {
         node->kind = ND_WHILE;
         expect("(");
         node->cond = expr();
+        expect(")");
+        node->then = stmt();
+        return node;
+    }
+
+    if (consume_keyword("for")) {
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_FOR;
+        expect("(");
+        node->init = expr();
+        expect(";");
+        if (!consume(";")) {
+            node->cond = expr();
+        }
+        expect(";");
+        if (!consume(";")) {
+            node->inc = expr();
+        }
         expect(")");
         node->then = stmt();
         return node;

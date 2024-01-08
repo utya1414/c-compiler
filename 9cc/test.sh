@@ -90,4 +90,9 @@ assert 3 'if (1) if (0) return 2; else return 3;'
 
 # test of while statement
 assert 10 'while(a < 10) a = a + 1; return a;'
+
+# test of for statement
+assert 10 'for (a = 0; a < 10; a = a + 1) a = a + 1; return a;'
+# assert 10 'for (a = 0; a < 10; a = a + 1) for (b = 0; b < 10; b = b + 1) a = a + 1; return a;'
+
 echo OK
