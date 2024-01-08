@@ -25,30 +25,6 @@ void error_at(char *loc, char *fmt, ...) {
     exit(1);
 }
 
-bool consume(char *op) {
-    if (token->kind != TK_RESERVED ||
-        strlen(op) != token->len ||
-        memcmp(token->str, op, token->len)) 
-        return false;
-    token = token->next;
-    return true;
-}
-
-Token *consume_ident() {
-    if (token->kind != TK_IDENT)
-        return NULL;
-    Token *tok = token;
-    token = token->next;
-    return tok;
-}
-
-bool consume_return() {
-    if (token->kind != TK_RETURN)
-        return false;
-    token = token->next;
-    return true;
-}
-
 void expect(char *op) {
     if (token->kind != TK_RESERVED ||
         strlen(op) != token->len ||
@@ -121,9 +97,21 @@ Token *tokenize() {
             continue;
         }
 
-        if (strncmp(p, "return", 6) == 0 && !is_alnum(p[6])) {
+        if (startswith(p, "return") && !is_alnum(p[6])) {
             cur = new_token(TK_RETURN, cur, p, 6);
             p += 6;
+            continue;
+        }
+
+        if (startswith(p, "if")) {
+            cur = new_token(TK_KEYWORD, cur, p, 2);
+            p += 2;
+            continue;
+        }
+
+        if (startswith(p, "else")) {
+            cur = new_token(TK_KEYWORD, cur, p, 4);
+            p += 4;
             continue;
         }
 
@@ -154,6 +142,39 @@ Token *tokenize() {
 //
 // Parser
 // 
+
+bool consume(char *op) {
+    if (token->kind != TK_RESERVED ||
+        strlen(op) != token->len ||
+        memcmp(token->str, op, token->len)) 
+        return false;
+    token = token->next;
+    return true;
+}
+
+Token *consume_ident() {
+    if (token->kind != TK_IDENT)
+        return NULL;
+    Token *tok = token;
+    token = token->next;
+    return tok;
+}
+
+bool consume_return() {
+    if (token->kind != TK_RETURN)
+        return false;
+    token = token->next;
+    return true;
+}
+
+bool consume_keyword(char *keyword) {
+    if (token->kind != TK_KEYWORD ||
+        strlen(keyword) != token->len ||
+        memcmp(token->str, keyword, token->len))
+        return false;
+    token = token->next;
+    return true;
+}
 
 Node *new_node(NodeKind kind) {
     Node *node = (Node*)calloc(1, sizeof(Node));
@@ -193,10 +214,25 @@ void program() {
 }
 
 // stmt    = expr ";"
+//         | "if" "(" expr ")" stmt ("else" stmt)?
+//         | "while" "(" expr ")" stmt
+//         | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 //         | "return" expr ";"
 Node *stmt() {
     Node *node;
-    if (consume_return()) {
+
+    if (consume_keyword("if")) {
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_IF;
+        expect("(");
+        node->cond = expr();
+        expect(")");
+        node->then = stmt();
+        if (consume_keyword("else")) {
+            node->els = stmt();
+        }
+        return node;
+    } else if (consume_return()) {
         node = calloc(1, sizeof(Node));
         node->kind = ND_RETURN;
         node->lhs = expr();

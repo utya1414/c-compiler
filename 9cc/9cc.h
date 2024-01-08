@@ -12,6 +12,7 @@
 typedef enum {
     TK_RESERVED,
     TK_RETURN,
+    TK_KEYWORD,
     TK_IDENT,
     TK_NUM,
     TK_EOF,
@@ -50,6 +51,7 @@ typedef enum {
     ND_LT, // <
     ND_LE, // <=
     ND_ASSIGN, // =
+    ND_IF, // if
     ND_LVAR, // local variable
     ND_RETURN, // return
     ND_NUM, // Integer
@@ -61,6 +63,12 @@ struct Node {
     NodeKind kind;
     Node *lhs;
     Node *rhs;
+
+    // if statement
+    Node *cond;
+    Node *then;
+    Node *els;
+    
     int val;
     int offset;
 };
