@@ -52,6 +52,7 @@ typedef enum {
     ND_LE, // <=
     ND_ASSIGN, // =
     ND_IF, // if
+    ND_WHILE, // while
     ND_LVAR, // local variable
     ND_RETURN, // return
     ND_NUM, // Integer

@@ -114,7 +114,13 @@ Token *tokenize() {
             p += 4;
             continue;
         }
-
+        
+        if (startswith(p, "while")) {
+            cur = new_token(TK_KEYWORD, cur, p, 5);
+            p += 5;
+            continue;
+        }
+        
         if (isidentfirst(*p)) {
             char *start = p;
             do {
@@ -232,7 +238,19 @@ Node *stmt() {
             node->els = stmt();
         }
         return node;
-    } else if (consume_return()) {
+    } 
+
+    if (consume_keyword("while")) {
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_WHILE;
+        expect("(");
+        node->cond = expr();
+        expect(")");
+        node->then = stmt();
+        return node;
+    }
+
+    if (consume_return()) {
         node = calloc(1, sizeof(Node));
         node->kind = ND_RETURN;
         node->lhs = expr();

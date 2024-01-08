@@ -88,4 +88,6 @@ assert 2 'if (0) return 3; else return 2;'
 assert 3 'if (1) if (0) return 2; else return 3;'
 # assert 2 'if (0) if (1) return 3; else return 2;'
 
+# test of while statement
+assert 10 'while(a < 10) a = a + 1; return a;'
 echo OK
