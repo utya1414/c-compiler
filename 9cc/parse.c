@@ -260,16 +260,18 @@ Node *stmt() {
         node = calloc(1, sizeof(Node));
         node->kind = ND_FOR;
         expect("(");
-        node->init = expr();
-        expect(";");
+        if (!consume(";")) {
+            node->init = expr();
+            expect(";");
+        }
         if (!consume(";")) {
             node->cond = expr();
+            expect(";");
         }
-        expect(";");
-        if (!consume(";")) {
+        if (!consume(")")) {
             node->inc = expr();
+            expect(")");
         }
-        expect(")");
         node->then = stmt();
         return node;
     }
