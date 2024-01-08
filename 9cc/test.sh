@@ -94,6 +94,7 @@ assert 10 'while(a < 10) a = a + 1; return a;'
 # test of for statement
 assert 10 'for (a = 0; a < 10; a = a + 1) a = a + 1; return a;'
 assert 10 'for (;;) return 10;'
+assert 9 'for (a = 0;; a = a + 1) if (a == 9) return a;'
 
 
 echo OK
