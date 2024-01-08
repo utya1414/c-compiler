@@ -72,16 +72,20 @@ assert 14 'a = 3;
 b = 5 * 6 - 8;
 return a + b / 2;'
 
-# test of if
+# test of if statement and nested if statement
 assert 3 'if (1) return 3;'
 assert 3 'if (0) return 2; return 3;'
 assert 3 'a = 3;
 if (a == 3) return a;'
 assert 3 'a = 3;
 if (a != 3) return 2; return a;'
+assert 3 'if (1) if (1) return 3;'
+assert 3 'if (1) if (0) return 2; return 3;'
 
-# test of if-else
+# test of if-else statement and nested if-else statement
 assert 3 'if (1) return 3; else return 2;'
 assert 2 'if (0) return 3; else return 2;'
+assert 3 'if (1) if (0) return 2; else return 3;'
+# assert 2 'if (0) if (1) return 3; else return 2;'
 
 echo OK
