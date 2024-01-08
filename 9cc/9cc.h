@@ -11,6 +11,7 @@
 
 typedef enum {
     TK_RESERVED,
+    TK_RETURN,
     TK_IDENT,
     TK_NUM,
     TK_EOF,
@@ -50,6 +51,7 @@ typedef enum {
     ND_LE, // <=
     ND_ASSIGN, // =
     ND_LVAR, // local variable
+    ND_RETURN, // return
     ND_NUM, // Integer
 } NodeKind;
 
@@ -70,6 +72,7 @@ void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
 bool consume(char *op);
 Token *consume_ident();
+bool consume_return();
 void expect(char *op);
 int expect_number();
 bool at_eof();
@@ -78,6 +81,7 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 bool startswith(char *p, char *q);
 bool isidentfirst(char p);
 bool isidentrest(char p);
+bool is_alnum(char c);
 Token *tokenize();
 
 //
