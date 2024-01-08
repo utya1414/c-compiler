@@ -98,7 +98,7 @@ Token *tokenize() {
         }
 
         if (startswith(p, "return") && !is_alnum(p[6])) {
-            cur = new_token(TK_RETURN, cur, p, 6);
+            cur = new_token(TK_KEYWORD, cur, p, 6);
             p += 6;
             continue;
         }
@@ -172,17 +172,10 @@ Token *consume_ident() {
     return tok;
 }
 
-bool consume_return() {
-    if (token->kind != TK_RETURN)
-        return false;
-    token = token->next;
-    return true;
-}
-
-bool consume_keyword(char *keyword) {
+bool consume_keyword(char *kw) {
     if (token->kind != TK_KEYWORD ||
-        strlen(keyword) != token->len ||
-        memcmp(token->str, keyword, token->len))
+        strlen(kw) != token->len ||
+        memcmp(token->str, kw, token->len))
         return false;
     token = token->next;
     return true;
@@ -273,7 +266,7 @@ Node *stmt() {
         return node;
     }
 
-    if (consume_return()) {
+    if (consume_keyword("return")) {
         node = new_node(ND_RETURN);
         node->lhs = expr();
     } else {

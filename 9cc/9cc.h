@@ -11,7 +11,6 @@
 
 typedef enum {
     TK_RESERVED,
-    TK_RETURN,
     TK_KEYWORD,
     TK_IDENT,
     TK_NUM,
@@ -86,7 +85,7 @@ void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
 bool consume(char *op);
 Token *consume_ident();
-bool consume_return();
+bool consume_keyword(char *kw);
 void expect(char *op);
 int expect_number();
 bool at_eof();
