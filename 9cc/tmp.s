@@ -25,7 +25,6 @@ main:
   pop rax
   mov [rax], rdi
   push rdi
-  pop rax
   jmp .L.end.1
 .L.else.1:
 .L.end.1:

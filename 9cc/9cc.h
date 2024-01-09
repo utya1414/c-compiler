@@ -77,7 +77,7 @@ struct Node {
     
     // block
     Node *next;
-    Node *body[100];
+    Node *body;
 
     int val;
     int offset;

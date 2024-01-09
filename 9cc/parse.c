@@ -231,7 +231,7 @@ Node *stmt() {
         int i = 0;
         node = new_node(ND_BLOCK);
         while(!consume("}")) {
-            node->body[i++] = stmt();
+            node = node->next = stmt();
         }
         return node;
     }

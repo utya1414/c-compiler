@@ -77,8 +77,8 @@ void gen(Node *node) {
         printf(".L.end.%d:\n", c);
         return;
     case ND_BLOCK:
-        for (int i = 0; node->body[i]; i++) {
-            gen(node->body[i]);
+        for (Node *n = node->body; n; n = n->next) {
+            gen(n);
             printf("  pop rax\n");
         }
         return;
