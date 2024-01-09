@@ -92,7 +92,7 @@ Token *tokenize() {
             continue;
         }
 
-        if (strchr("+-*/()<>=;", *p)) {
+        if (strchr("+-*/()<>=;{}", *p)) {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }
@@ -219,12 +219,22 @@ void program() {
 }
 
 // stmt    = expr ";"
+//         | "{" stmt* "}"
 //         | "if" "(" expr ")" stmt ("else" stmt)?
 //         | "while" "(" expr ")" stmt
 //         | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 //         | "return" expr ";"
 Node *stmt() {
     Node *node;
+
+    if (consume("{")) {
+        int i = 0;
+        node = new_node(ND_BLOCK);
+        while(!consume("}")) {
+            node->body[i++] = stmt();
+        }
+        return node;
+    }
 
     if (consume_keyword("if")) {
         node = new_node(ND_IF);
