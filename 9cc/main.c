@@ -30,7 +30,6 @@ int main(int argc, char **argv) {
 
         printf("  pop rax\n");
     }
-
     // エピローグ
     printf("  mov rsp, rbp\n");
     printf("  pop rbp\n");

@@ -1,8 +1,21 @@
 #include"9cc.h"
 
+static int depth;
+static char *argreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+
 static int count(void) {
     static int i = 1;
     return i++;
+}
+
+static void push(void) {
+    printf("  push rax\n");
+    depth++;
+}
+
+static void pop(char *arg) {
+    printf("  pop %s\n", arg);
+    depth--;
 }
 
 void gen(Node *node) {
@@ -32,7 +45,7 @@ void gen(Node *node) {
         printf("  pop rbp\n");
         printf("  ret\n");
         return;
-    case ND_IF:
+    case ND_IF: {
         int c = count();
         gen(node->cond);
         printf("  pop rax\n");
@@ -46,8 +59,9 @@ void gen(Node *node) {
         }
         printf(".L.end.%d:\n", c);
         return;
-    case ND_WHILE:
-        c = count();
+    }
+    case ND_WHILE: {
+        int c = count();
         printf(".L.begin.%d:\n", c);
         gen(node->cond);
         printf("  pop rax\n");
@@ -57,8 +71,9 @@ void gen(Node *node) {
         printf("  jmp .L.begin.%d\n", c);
         printf(".L.end.%d:\n", c);
         return;
-    case ND_FOR:
-        c = count();
+    }
+    case ND_FOR: {
+        int c = count();
         if (node->init) {
             gen(node->init);
         }
@@ -76,12 +91,26 @@ void gen(Node *node) {
         printf("  jmp .L.begin.%d\n", c);
         printf(".L.end.%d:\n", c);
         return;
+    }
     case ND_BLOCK:
         for (Node *n = node->body; n; n = n->next) {
             gen(n);
             printf("  pop rax\n");
         }
         return;
+    case ND_FUNCALL: {
+        int nargs = 0;
+        for (Node *arg = node->args; arg; arg = arg->next) {
+            gen(arg);
+            nargs++;
+        }
+        for (int i = nargs-1; i >= 0; i--) {
+            pop(argreg[i]);
+        }
+        printf("  call %s\n", node->funcname);
+        printf("  push rax\n");
+        return ;
+        }
     }
 
     gen(node->lhs);

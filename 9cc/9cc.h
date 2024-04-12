@@ -54,6 +54,7 @@ typedef enum {
     ND_WHILE, // while
     ND_FOR, // for
     ND_BLOCK, // block
+    ND_FUNCALL, // function call
     ND_LVAR, // local variable
     ND_RETURN, // return
     ND_NUM, // Integer
@@ -78,6 +79,10 @@ struct Node {
     // block
     Node *next;
     Node *body;
+
+    // function call
+    char *funcname;
+    Node *args;
 
     int val;
     int offset;
@@ -130,3 +135,5 @@ Node *primary();
 
 void gen(Node *node);
 void gen_lval(Node *node);
+
+int foo();

@@ -13,4 +13,7 @@ test: 9cc
 clean: 
 		rm -f 9cc *.o *~ tmp*
 
-.PHONY: test clean
+exec:
+		docker exec -it 3ee03c6933d6 /bin/bash
+
+.PHONY: test clean exec

@@ -92,7 +92,7 @@ Token *tokenize() {
             continue;
         }
 
-        if (strchr("+-*/()<>=;{}", *p)) {
+        if (strchr("+-*/()<>=;{},", *p)) {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }
@@ -378,16 +378,33 @@ Node *unary() {
     return primary();
 }
 
-// primary    = num | ident | "(" expr ")"
+// primary    = num 
+//              | ident ("(" (num ("," num)*)? ")")?
+//              | "(" expr ")"
 Node *primary() {
     if (consume("(")) {
         Node *node = expr();
         expect(")");
         return node;
     }
-    
+
     Token *tok = consume_ident();
     if (tok) {
+        // function call
+        if (consume("(")) {
+            Node *node = new_node(ND_FUNCALL);
+            node->funcname = strndup(tok->str, tok->len);
+            if (!consume(")")) {
+                node->args = assign();
+                Node *cur = node->args;
+                while (consume(",")) {
+                    cur = cur->next = assign();
+                }
+                expect(")");
+            }
+            return node;
+        }
+
         Node *node = new_node(ND_LVAR);
 
         LVar *lvar = find_lvar(tok);
