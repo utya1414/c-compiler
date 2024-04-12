@@ -16,6 +16,7 @@ main:
   pop rdx
   pop rsi
   pop rdi
+  mov rax, 8
   call add6
   push rax
   push 2
@@ -29,6 +30,7 @@ main:
   pop rdx
   pop rsi
   pop rdi
+  mov rax, 8
   call add6
   push rax
   pop rax

@@ -107,6 +107,7 @@ void gen(Node *node) {
         for (int i = nargs-1; i >= 0; i--) {
             pop(argreg[i]);
         }
+        printf("  mov rax, 0\n"); // 関数呼び出し前にrspを16の倍数にする
         printf("  call %s\n", node->funcname);
         printf("  push rax\n");
         return ;
