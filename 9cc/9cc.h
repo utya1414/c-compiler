@@ -88,6 +88,15 @@ struct Node {
     int offset;
 };
 
+typedef struct Function Function;
+struct Function {
+    Function *next;
+    char *name;
+    Node *body;
+    LVar *locals;
+    int stack_size;
+};
+
 extern char *user_input;
 extern Token *token;
 
@@ -116,9 +125,8 @@ Node *new_binary(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_num(int val);
 LVar *find_lvar(Token *tok);
 
-extern Node *code[];
-
-void program();
+Node *compound_stmt();
+Function *program();
 Node *stmt();
 Node *expr();
 Node *assign();
@@ -135,5 +143,6 @@ Node *primary();
 
 void gen(Node *node);
 void gen_lval(Node *node);
+void codegen(Function *fns);
 
 int foo();

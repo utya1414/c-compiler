@@ -34,8 +34,9 @@ void expect(char *op) {
 }
 
 int expect_number() {
-    if (token->kind != TK_NUM)
+    if (token->kind != TK_NUM) {
         error_at(token->str, "expected a number");
+    }
     int val = token->val;
     token = token->next;
     return val;
@@ -146,7 +147,6 @@ Token *tokenize() {
 
         error_at(p, "invalid token");
     }
-
     new_token(TK_EOF, cur, p, 0);
     return head.next;
 }
@@ -181,6 +181,13 @@ bool consume_keyword(char *kw) {
     return true;
 }
 
+char *get_ident(Token *tok) {
+    if (tok->kind != TK_IDENT) {
+        error_at(tok->str, "expected an identifier");
+    }
+    return strndup(tok->str, tok->len);
+}
+
 Node *new_node(NodeKind kind) {
     Node *node = (Node*)calloc(1, sizeof(Node));
     node->kind = kind;
@@ -209,17 +216,56 @@ LVar *find_lvar(Token *tok) {
     return NULL;
 }
 
-// program    = stmt*
-void program() {
-    int i = 0;
-    while (!at_eof()) {
-        code[i++] = stmt();
+// function   = ident "(" (assign ("," assign)*)? ")" compound_stmt
+Function *function() {
+    Token *tok = consume_ident();
+    locals = NULL;
+    Function *fn = calloc(1, sizeof(Function));
+    fn->name = get_ident(tok);
+    // if (consume("(")) {
+    //     if (!consume(")")) {
+    //         fn->args = assign();
+    //         Node *cur = ->args;
+    //         while (consume(",")) {
+    //             cur = cur->next = assign();
+    //         }
+    //         expect(")");
+    //     }
+    // }
+    expect("(");
+    expect(")");
+    consume("{");
+    fn->body = compound_stmt();
+    fn->locals = locals;
+    return fn;
+}
+
+// compound_stmt = stmt* "}"
+Node *compound_stmt() {
+    Node *node = new_node(ND_BLOCK);
+
+    Node head = {};
+    Node *cur = &head;
+    while (!consume("}")) {
+        cur = cur->next = stmt();
     }
-    code[i] = NULL;
+    node->body = head.next;
+    return node;
+}
+
+// プログラムは関数のリスト
+// program    = function*
+Function *program() {
+    Function head = {};
+    Function *cur = &head;
+    while (!at_eof()) {
+        cur = cur->next = function();
+    }
+    return head.next;
 }
 
 // stmt    = expr ";"
-//         | "{" stmt* "}"
+//         | "{" compound_stmt 
 //         | "if" "(" expr ")" stmt ("else" stmt)?
 //         | "while" "(" expr ")" stmt
 //         | "for" "(" expr? ";" expr? ";" expr? ")" stmt
@@ -228,12 +274,7 @@ Node *stmt() {
     Node *node;
 
     if (consume("{")) {
-        int i = 0;
-        node = new_node(ND_BLOCK);
-        while(!consume("}")) {
-            node = node->next = stmt();
-        }
-        return node;
+        return compound_stmt();
     }
 
     if (consume_keyword("if")) {
@@ -404,7 +445,7 @@ Node *primary() {
             }
             return node;
         }
-
+        
         Node *node = new_node(ND_LVAR);
 
         LVar *lvar = find_lvar(tok);
@@ -413,7 +454,7 @@ Node *primary() {
         } else {
             lvar = calloc(1, sizeof(LVar));
             lvar->next = locals;
-            lvar->name = tok->str;
+            lvar->name = get_ident(tok);
             lvar->len = tok->len;
             if (locals) {
                 lvar->offset = locals->offset + 8;
@@ -425,5 +466,10 @@ Node *primary() {
         }
         return node;
     }
+
+    if (at_eof()) {
+        return ;
+    }
+
     return new_num(expect_number());
 }

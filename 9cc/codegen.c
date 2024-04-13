@@ -2,6 +2,7 @@
 
 static int depth;
 static char *argreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+static Function *current_fn;
 
 static int count(void) {
     static int i = 1;
@@ -40,10 +41,7 @@ void gen(Node *node) {
         return;
     case ND_RETURN:
         gen(node->lhs);
-        printf("  pop rax\n");
-        printf("  mov rsp, rbp\n");
-        printf("  pop rbp\n");
-        printf("  ret\n");
+        printf("  jmp .L.return.%s\n", current_fn->name);
         return;
     case ND_IF: {
         int c = count();
@@ -95,7 +93,6 @@ void gen(Node *node) {
     case ND_BLOCK:
         for (Node *n = node->body; n; n = n->next) {
             gen(n);
-            printf("  pop rax\n");
         }
         return;
     case ND_FUNCALL: {
@@ -159,6 +156,7 @@ void gen(Node *node) {
     printf("  push rax\n");
 }
 
+// rbpの上にのっているローカル変数のアドレスを計算してスタックにpushする
 void gen_lval(Node *node) {
     if (node->kind != ND_LVAR)
         error("代入の左辺値が変数ではありません");
@@ -168,3 +166,34 @@ void gen_lval(Node *node) {
     printf("  push rax\n");
 }
 
+void assign_lvar_offsets(Function *fns) {
+    for (Function *fn = fns; fn; fn = fn->next) {
+        int offset = 0;
+        for (LVar *var = fn->locals; var; var = var->next) {
+            offset += 8;
+            var->offset = offset;
+        }
+        fn->stack_size = offset;
+    }
+}
+
+void codegen(Function *fns) {
+    // アセンブリの前半部分を出力
+    printf(".intel_syntax noprefix\n");
+
+    assign_lvar_offsets(fns);
+    for (Function *fn = fns; fn; fn = fn->next) {        
+        current_fn = fn;
+        printf(".global %s\n", fn->name);
+        printf("%s:\n", fn->name);
+        printf("  push rbp\n");
+        printf("  mov rbp, rsp\n");
+        printf("  sub rsp, %d\n", fn->stack_size);
+        gen(fn->body);
+        printf(".L.return.%s:\n", fn->name);
+        printf("  pop rax\n");
+        printf("  mov rsp, rbp\n");
+        printf("  pop rbp\n");
+        printf("  ret\n");
+    }
+}

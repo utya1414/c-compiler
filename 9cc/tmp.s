@@ -1,42 +1,26 @@
 .intel_syntax noprefix
-.global main
-main:
+.global ret4
+ret4:
   push rbp
   mov rbp, rsp
-  sub rsp, 208
-  push 1
-  push 2
-  push 3
+  sub rsp, 0
   push 4
-  push 5
-  push 6
-  pop r9
-  pop r8
-  pop rcx
-  pop rdx
-  pop rsi
-  pop rdi
-  mov rax, 8
-  call add6
-  push rax
-  push 2
-  push 3
-  push 4
-  push 5
-  push 6
-  pop r9
-  pop r8
-  pop rcx
-  pop rdx
-  pop rsi
-  pop rdi
-  mov rax, 8
-  call add6
-  push rax
+  jmp .L.return.ret4
+.L.return.ret4:
   pop rax
   mov rsp, rbp
   pop rbp
   ret
+.global main
+main:
+  push rbp
+  mov rbp, rsp
+  sub rsp, 0
+  mov rax, 0
+  call ret4
+  push rax
+  jmp .L.return.main
+.L.return.main:
   pop rax
   mov rsp, rbp
   pop rbp
