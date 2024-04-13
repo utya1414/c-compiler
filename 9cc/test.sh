@@ -124,7 +124,8 @@ assert 6 'main() { return add3(1, 2, 3); }'
 assert 21 'main() { return add6(1, 2, 3, 4, 5, 6); }'
 assert 41 'main() { return add6(add6(1, 2, 3, 4, 5, 6), 2, 3, 4, 5, 6); }'
 
-# test of function definition
+# # test of function definition
 assert 4 'ret4() { return 4; } main() { return ret4(); }'
-# assert 55 'fib(n) { if (n <= 1) return n; return fib(n - 1) + fib(n - 2); } main() { return fib(9); }'
+assert 4 'retarg(a) { return a; } main() { return retarg(4); }'
+assert 55 'fib(n) { if (n <= 1) { return n; } return fib(n - 1) + fib(n - 2); } main() { return fib(10); }'
 echo OK

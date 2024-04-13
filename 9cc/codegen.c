@@ -186,10 +186,17 @@ void codegen(Function *fns) {
         current_fn = fn;
         printf(".global %s\n", fn->name);
         printf("%s:\n", fn->name);
+
         printf("  push rbp\n");
         printf("  mov rbp, rsp\n");
         printf("  sub rsp, %d\n", fn->stack_size);
+
+        int i = 0;
+        for (LVar *var = fn->params; var; var = var->next) {
+            printf("  mov [rbp-%d], %s\n", var->offset, argreg[i++]);
+        }
         gen(fn->body);
+
         printf(".L.return.%s:\n", fn->name);
         printf("  pop rax\n");
         printf("  mov rsp, rbp\n");

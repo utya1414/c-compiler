@@ -216,24 +216,30 @@ LVar *find_lvar(Token *tok) {
     return NULL;
 }
 
-// function   = ident "(" (assign ("," assign)*)? ")" compound_stmt
+// function   = ident "(" (assign ("," assign)*)? ")" { compound_stmt
 Function *function() {
     Token *tok = consume_ident();
     locals = NULL;
     Function *fn = calloc(1, sizeof(Function));
     fn->name = get_ident(tok);
-    // if (consume("(")) {
-    //     if (!consume(")")) {
-    //         fn->args = assign();
-    //         Node *cur = ->args;
-    //         while (consume(",")) {
-    //             cur = cur->next = assign();
-    //         }
-    //         expect(")");
-    //     }
-    // }
-    expect("(");
-    expect(")");
+
+    if (consume("(")) {
+        LVar head = {};
+        LVar *cur = &head;
+        while (!consume(")")) {
+            if (cur != & head) {
+                expect(",");
+            }
+            Token *tok = consume_ident();
+            LVar *lvar = calloc(1, sizeof(LVar));
+            lvar->name = get_ident(tok);
+            lvar->len = tok->len;
+            lvar->offset = 8;
+            cur = cur->next = lvar;            
+        }
+        fn->params = head.next;
+    }
+
     consume("{");
     fn->body = compound_stmt();
     fn->locals = locals;
@@ -465,10 +471,6 @@ Node *primary() {
             locals = lvar;
         }
         return node;
-    }
-
-    if (at_eof()) {
-        return ;
     }
 
     return new_num(expect_number());
