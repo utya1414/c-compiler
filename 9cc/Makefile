@@ -15,7 +15,12 @@ clean:
 
 start:
 	docker start 3ee03c6933d6
+
 exec:
 		docker exec -it 3ee03c6933d6 /bin/bash
 
-.PHONY: test clean exec start
+gdb:
+	gcc -ggdb tmp.s -o tmp
+	gdb tmp
+
+.PHONY: test clean exec start gdb

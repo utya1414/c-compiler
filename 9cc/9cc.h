@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
+#include<stdint.h>
 
 //
 //  Tokenizer
@@ -50,6 +51,8 @@ typedef enum {
     ND_LT, // <
     ND_LE, // <=
     ND_ASSIGN, // =
+    ND_ADDR, // &
+    ND_DEREF, // *
     ND_IF, // if
     ND_WHILE, // while
     ND_FOR, // for
