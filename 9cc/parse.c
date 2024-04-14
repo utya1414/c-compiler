@@ -4,6 +4,12 @@
 // Parser
 // 
 
+void debug_token() {
+    fprintf(stderr, "token->kind: %d\n", token->kind);
+    fprintf(stderr, "token->str: %s\n", token->str);
+    return;
+}
+
 bool consume(char *op) {
     if (token->kind != TK_RESERVED ||
         strlen(op) != token->len ||
@@ -56,6 +62,27 @@ Node *new_num(int val) {
     return node;
 }
 
+Node *new_unary(NodeKind kind, Node *lhs) {
+    Node *node = new_node(kind);
+    node->lhs = lhs;
+    return node;
+}
+
+Node *new_var_node(LVar *lvar) {
+    Node *node = new_node(ND_LVAR);
+    node->lvar = lvar;
+    return node;
+}
+LVar *new_lvar(char *name, int len, Type *ty) {
+    LVar *lvar = calloc(1, sizeof(LVar));
+    lvar->name = name;
+    lvar->len = len;
+    lvar->ty = ty;
+    lvar->next = locals;
+    locals = lvar;
+    return lvar;
+}
+
 LVar *find_lvar(Token *tok) {
     for (LVar *var = locals; var; var = var->next) {
         if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) {
@@ -65,13 +92,57 @@ LVar *find_lvar(Token *tok) {
     return NULL;
 }
 
+static Type *declspec() {
+    token = token->next;
+    return ty_int;
+}
+
+// declarator = "*" ident
+static Type *declarator(Type *ty) {
+    while (consume("*")) {
+        ty = pointer_to(ty);
+    }
+
+    if (token->kind != TK_IDENT) {
+        error_at(token->str, "expected an variable name");
+    }
+
+    ty->name = token;
+    token = token->next;
+    return ty;
+}
+
+// declaration = declspec (declarator ("=" expr)? ("," declarator ("=" expr)?)*)? ";"
+static Node *declaration() {
+    Type *ty = declspec();
+    Node head = {};
+    Node *cur = &head;
+    while(!consume(";")) {
+        if (cur != &head) {
+            expect(",");
+        }
+        Type *ty = declarator(ty);
+        LVar *var = new_lvar(get_ident(ty->name), ty->name->len, ty);
+        fprintf(stderr, "token->str: %s\n", token->str);
+        if (!consume("=")) {
+           continue;
+        }
+        Node *node = new_binary(ND_ASSIGN, new_var_node(var), assign());
+        cur = cur->next = new_unary(ND_EXPR_STMT, node);
+    }
+
+    Node *node = new_node(ND_BLOCK);
+    node->body = head.next;
+    return node;
+}
+
 // function   = ident "(" (assign ("," assign)*)? ")" { compound_stmt
 Function *function() {
-    Token *tok = consume_ident();
+    Type *ty = declspec();
+    ty = declarator(ty);
     locals = NULL;
     Function *fn = calloc(1, sizeof(Function));
-    fn->name = get_ident(tok);
-
+    fn->name = get_ident(ty->name);
     if (consume("(")) {
         LVar head = {};
         LVar *cur = &head;
@@ -95,14 +166,17 @@ Function *function() {
     return fn;
 }
 
-// compound_stmt = stmt* "}"
+// compound_stmt = (declaration | stmt)* "}"
 Node *compound_stmt() {
     Node *node = new_node(ND_BLOCK);
-
     Node head = {};
     Node *cur = &head;
     while (!consume("}")) {
-        cur = cur->next = stmt();
+        if (consume_keyword("int")) {
+            cur = cur->next = declaration();
+        } else {
+            cur = cur->next = stmt();
+        }
     }
     node->body = head.next;
     return node;
@@ -119,11 +193,11 @@ Function *program() {
     return head.next;
 }
 
-// stmt    = expr ";"
+// stmt    = expr-stmt ";"
 //         | "{" compound_stmt 
 //         | "if" "(" expr ")" stmt ("else" stmt)?
 //         | "while" "(" expr ")" stmt
-//         | "for" "(" expr? ";" expr? ";" expr? ")" stmt
+//         | "for" "(" expr-stmt expr? ";" expr? ")" stmt
 //         | "return" expr ";"
 Node *stmt() {
     Node *node;
@@ -156,10 +230,9 @@ Node *stmt() {
     if (consume_keyword("for")) {
         node = new_node(ND_FOR);
         expect("(");
-        if (!consume(";")) {
-            node->init = expr();
-            expect(";");
-        }
+
+        node->init = expr_stmt();
+
         if (!consume(";")) {
             node->cond = expr();
             expect(";");
@@ -175,13 +248,21 @@ Node *stmt() {
     if (consume_keyword("return")) {
         node = new_node(ND_RETURN);
         node->lhs = expr();
-    } else {
-        node = expr();
+        expect(";");
+        return node;
     }
 
-    if (!consume(";")) {
-        error_at(token->str, "';'ではないトークンです");
+    return expr_stmt();
+}
+
+// expr-stmt = expr? ";"
+Node *expr_stmt() {
+    if (consume(";")) {
+        return new_node(ND_BLOCK);
     }
+    Node *node = new_node(ND_EXPR_STMT);
+    node->lhs = expr();
+    expect(";");
     return node;
 }
 

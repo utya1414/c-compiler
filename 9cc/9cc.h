@@ -6,6 +6,7 @@
 #include <string.h>
 #include<stdint.h>
 
+typedef struct Type Type;
 //
 //  Tokenizer
 //
@@ -34,6 +35,7 @@ typedef struct LVar LVar;
 struct LVar {
     LVar *next;
     char *name;
+    Type *ty;
     int len;
     int offset;
 };
@@ -59,6 +61,7 @@ typedef enum {
     ND_BLOCK, // block
     ND_FUNCALL, // function call
     ND_LVAR, // local variable
+    ND_EXPR_STMT, // expression statement
     ND_RETURN, // return
     ND_NUM, // Integer
 } NodeKind;
@@ -69,6 +72,7 @@ struct Node {
     NodeKind kind;
     Node *lhs;
     Node *rhs;
+    Type *ty;
 
     // if, else, while, statement
     Node *cond;
@@ -87,6 +91,8 @@ struct Node {
     char *funcname;
     Node *args;
 
+    // local variable
+    LVar *lvar;
     int val;
     int offset;
 };
@@ -101,6 +107,18 @@ struct Function {
     int stack_size;
 };
 
+typedef enum {
+    TY_INT,
+    TY_PTR,
+} TypeKind;
+
+struct Type {
+    TypeKind kind;
+    Type *base;
+    Token *name;
+};
+
+extern Type *ty_int;
 extern char *user_input;
 extern Token *token;
 
@@ -119,6 +137,12 @@ bool isidentfirst(char p);
 bool isidentrest(char p);
 bool is_alnum(char c);
 Token *tokenize();
+// 
+// Type 
+// 
+bool is_integre(Type *ty);
+Type *pointer_to(Type *base);
+void add_type(Node *node);
 
 //
 // Parser
@@ -129,6 +153,7 @@ Node *new_binary(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_num(int val);
 LVar *find_lvar(Token *tok);
 
+Node *expr_stmt();
 Node *compound_stmt();
 Function *program();
 Node *stmt();

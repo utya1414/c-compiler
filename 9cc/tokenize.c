@@ -128,6 +128,12 @@ Token *tokenize() {
             continue;
         }
 
+        if (startswith(p, "int")) {
+            cur = new_token(TK_KEYWORD, cur, p, 3);
+            p += 3;
+            continue;
+        }
+
         if (isidentfirst(*p)) {
             char *start = p;
             do {
