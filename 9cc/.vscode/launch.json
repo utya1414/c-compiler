@@ -1,23 +1,21 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "launch_cpp",
+            "name": "Debug Make Test",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/9cc",
-            "args": ["int main() { int a; a = 3; return a; }"],
+            "program": "${workspaceFolder}/9cc", // テストが実行するプログラムへのパス
+            "args": [], // 必要に応じて引数を追加
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
+            "preLaunchTask": "make test", // デバッグ開始前に実行するタスク
             "setupCommands": [
                 {
-                    "description": "gdb の再フォーマットを有効にする",
+                    "description": "Enable pretty-printing for gdb",
                     "text": "-enable-pretty-printing",
                     "ignoreFailures": true
                 }

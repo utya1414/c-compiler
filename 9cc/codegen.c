@@ -174,16 +174,16 @@ void gen_lval(Node *node) {
         error("代入の左辺値が変数ではありません");
 
     printf("  mov rax, rbp\n");
-    printf("  sub rax, %d\n", node->offset);
+    printf("  sub rax, %d\n", node->lvar->offset);
     printf("  push rax\n");
 }
 
 void assign_lvar_offsets(Function *fns) {
     for (Function *fn = fns; fn; fn = fn->next) {
         int offset = 0;
-        for (LVar *var = fn->locals; var; var = var->next) {
+        for (LVar *lvar = fn->locals; lvar; lvar = lvar->next) {
             offset += 8;
-            var->offset = offset;
+            lvar->offset = offset;
         }
         fn->stack_size = offset;
     }
@@ -204,8 +204,8 @@ void codegen(Function *fns) {
         printf("  sub rsp, %d\n", fn->stack_size);
 
         int i = 0;
-        for (LVar *var = fn->params; var; var = var->next) {
-            printf("  mov [rbp-%d], %s\n", var->offset, argreg[i++]);
+        for (LVar *lvar = fn->params; lvar; lvar = lvar->next) {
+            printf("  mov [rbp-%d], %s\n", lvar->offset, argreg[i++]);
         }
         gen(fn->body);
 

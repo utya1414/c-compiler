@@ -13,6 +13,19 @@ Type *pointer_to(Type *base) {
     return ty;
 }
 
+Type *copy_type(Type *ty) {
+    Type *ret = calloc(1, sizeof(Type));
+    *ret = *ty;
+    return ret;
+}
+
+Type *func_type(Type *return_ty) {
+    Type *ty = calloc(1, sizeof(Type));
+    ty->kind = TY_FUNC;
+    ty->return_ty = return_ty;
+    return ty;
+}
+
 void add_type(Node *node) {
     if (!node || node->ty) {
         return;

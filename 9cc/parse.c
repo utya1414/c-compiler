@@ -7,6 +7,7 @@
 void debug_token() {
     fprintf(stderr, "token->kind: %d\n", token->kind);
     fprintf(stderr, "token->str: %s\n", token->str);
+    fprintf(stderr, "token->len: %d\n", token->len);
     return;
 }
 
@@ -73,6 +74,7 @@ Node *new_var_node(LVar *lvar) {
     node->lvar = lvar;
     return node;
 }
+
 LVar *new_lvar(char *name, int len, Type *ty) {
     LVar *lvar = calloc(1, sizeof(LVar));
     lvar->name = name;
@@ -84,20 +86,49 @@ LVar *new_lvar(char *name, int len, Type *ty) {
 }
 
 LVar *find_lvar(Token *tok) {
-    for (LVar *var = locals; var; var = var->next) {
-        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) {
-            return var;
+    for (LVar *lvar = locals; lvar; lvar = lvar->next) {
+        if (lvar->len == tok->len && !memcmp(tok->str, lvar->name, lvar->len)) {
+            return lvar;
         }
     }
     return NULL;
 }
 
+// declspec = "int"
 static Type *declspec() {
+    // int型のみ対応
+    if (strncmp(token->str, "int", token->len)) {
+        error_at(token->str, "expected int");
+    }
     token = token->next;
     return ty_int;
 }
 
-// declarator = "*" ident
+// type-suffix = ("(" func-params? ")")?
+// func-params = param ("," param)"
+// param = declspec declarator
+static Type *type_suffix(Type *ty) {
+    if (consume("(")) {
+        Type head = {};
+        Type *cur = &head;
+        while (!consume(")")) {
+            if (cur != &head) {
+                expect(",");
+            }
+            Type *basety = declspec();
+            Type *ty = declarator(basety);
+            cur = cur->next = copy_type(ty);
+        }
+
+        ty = func_type(ty);
+        ty->params = head.next;
+        return ty;
+    }
+    return ty;
+}
+
+// 整数型や関数型、ポインタ型の宣言をパースする 
+// declarator = "*" ident type-suffix?
 static Type *declarator(Type *ty) {
     while (consume("*")) {
         ty = pointer_to(ty);
@@ -106,28 +137,28 @@ static Type *declarator(Type *ty) {
     if (token->kind != TK_IDENT) {
         error_at(token->str, "expected an variable name");
     }
-
-    ty->name = token;
+    Token *tok = token;
     token = token->next;
+    ty = type_suffix(ty);
+    ty->name = tok;
     return ty;
 }
 
 // declaration = declspec (declarator ("=" expr)? ("," declarator ("=" expr)?)*)? ";"
 static Node *declaration() {
-    Type *ty = declspec();
+    Type *basety = declspec();
     Node head = {};
     Node *cur = &head;
     while(!consume(";")) {
         if (cur != &head) {
             expect(",");
         }
-        Type *ty = declarator(ty);
-        LVar *var = new_lvar(get_ident(ty->name), ty->name->len, ty);
-        fprintf(stderr, "token->str: %s\n", token->str);
+        Type *ty = declarator(basety);
+        LVar *lvar = new_lvar(get_ident(ty->name), ty->name->len, ty);
         if (!consume("=")) {
            continue;
         }
-        Node *node = new_binary(ND_ASSIGN, new_var_node(var), assign());
+        Node *node = new_binary(ND_ASSIGN, new_var_node(lvar), assign());
         cur = cur->next = new_unary(ND_EXPR_STMT, node);
     }
 
@@ -136,30 +167,22 @@ static Node *declaration() {
     return node;
 }
 
-// function   = ident "(" (assign ("," assign)*)? ")" { compound_stmt
+static void create_param_lvars(Type *param) {
+    if (param) {
+        create_param_lvars(param->next);
+        LVar *lvar = new_lvar(get_ident(param->name), param->name->len, param);
+    }
+}
+
+// function   = declarator "{" compound_stmt
 Function *function() {
     Type *ty = declspec();
     ty = declarator(ty);
     locals = NULL;
     Function *fn = calloc(1, sizeof(Function));
     fn->name = get_ident(ty->name);
-    if (consume("(")) {
-        LVar head = {};
-        LVar *cur = &head;
-        while (!consume(")")) {
-            if (cur != & head) {
-                expect(",");
-            }
-            Token *tok = consume_ident();
-            LVar *lvar = calloc(1, sizeof(LVar));
-            lvar->name = get_ident(tok);
-            lvar->len = tok->len;
-            lvar->offset = 8;
-            cur = cur->next = lvar;            
-        }
-        fn->params = head.next;
-    }
-
+    create_param_lvars(ty->params);
+    fn->params = locals;
     consume("{");
     fn->body = compound_stmt();
     fn->locals = locals;
@@ -172,7 +195,7 @@ Node *compound_stmt() {
     Node head = {};
     Node *cur = &head;
     while (!consume("}")) {
-        if (consume_keyword("int")) {
+        if (!strncmp(token->str, "int", token->len)) {
             cur = cur->next = declaration();
         } else {
             cur = cur->next = stmt();
@@ -364,7 +387,7 @@ Node *unary() {
 }
 
 // primary    = num 
-//              | ident ("(" (num ("," num)*)? ")")?
+//              | ident func-args?
 //              | "(" expr ")"
 Node *primary() {
     if (consume("(")) {
@@ -390,25 +413,11 @@ Node *primary() {
             return node;
         }
         
-        Node *node = new_node(ND_LVAR);
-
         LVar *lvar = find_lvar(tok);
-        if (lvar) {
-            node->offset = lvar->offset;
-        } else {
-            lvar = calloc(1, sizeof(LVar));
-            lvar->next = locals;
-            lvar->name = get_ident(tok);
-            lvar->len = tok->len;
-            if (locals) {
-                lvar->offset = locals->offset + 8;
-            } else {
-                lvar->offset = 8;
-            }
-            node->offset = lvar->offset;
-            locals = lvar;
+       if (!lvar) {
+            error("undefined variable");
         }
-        return node;
+        return new_var_node(lvar);
     }
 
     return new_num(expect_number());

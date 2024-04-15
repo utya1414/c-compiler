@@ -110,12 +110,17 @@ struct Function {
 typedef enum {
     TY_INT,
     TY_PTR,
+    TY_FUNC,
 } TypeKind;
 
 struct Type {
     TypeKind kind;
     Type *base;
     Token *name;
+
+    Type *return_ty;
+    Type *params;
+    Type *next;
 };
 
 extern Type *ty_int;
@@ -137,11 +142,15 @@ bool isidentfirst(char p);
 bool isidentrest(char p);
 bool is_alnum(char c);
 Token *tokenize();
+
 // 
 // Type 
 // 
+
 bool is_integre(Type *ty);
 Type *pointer_to(Type *base);
+Type *copy_type(Type *ty);
+Type *func_type(Type *return_ty);
 void add_type(Node *node);
 
 //
@@ -153,6 +162,10 @@ Node *new_binary(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_num(int val);
 LVar *find_lvar(Token *tok);
 
+static Type *type_suffix(Type *ty);
+static Type *declspec();
+static Node *declaration();
+static Type *declarator(Type *ty);
 Node *expr_stmt();
 Node *compound_stmt();
 Function *program();
