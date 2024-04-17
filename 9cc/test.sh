@@ -107,9 +107,20 @@ assert 4 'int retarg(int a) { return a; } int main() { return retarg(4); }'
 assert 55 'int fib(int n) { if (n <= 1) { return n; } return fib(n - 1) + fib(n - 2); } int main() { return fib(10); }'
 
 # # test of & and *
-# assert 3 'int main() { int a; int *y; a = 3; y = &a; return *y; }'
-# assert 5 'int main() { int a; int b; int *y; a = 3; b = 5; y = &a - 8; return *y; }'
+assert 3 'int main() { int a; int *y; a = 3; y = &a; return *y; }'
+assert 5 'int main() { int a; int b; int *y; a = 3; b = 5; y = &a + 8; return *y; }'
+assert 3 'int main() { int x=3; return *&x; }'
+assert 3 'int main() { int x; int *y; y = &x; *y = 3; return x;}'
 
-# # test of int
-assert 3 'int main() { int a; a = 3; return a; }'
+assert 3 'int main() { int x=3; int *y=&x; int **z=&y; return **z; }'
+# assert 5 'int main() { int x=3; int y=5; return *(&x+1); }'
+# assert 3 'int main() { int x=3; int y=5; return *(&y-1); }'
+# assert 5 'int main() { int x=3; int y=5; return *(&x-(-1)); }'
+# assert 5 'int main() { int x=3; int *y=&x; *y=5; return x; }'
+# assert 7 'int main() { int x=3; int y=5; *(&x+1)=7; return y; }'
+# assert 7 'int main() { int x=3; int y=5; *(&y-2+1)=7; return x; }'
+# assert 5 'int main() { int x=3; return (&x+2)-&x+3; }'
+
+# test of int
+# assert 3 'int main() { int a; a = 3; return a; }'
 echo OK

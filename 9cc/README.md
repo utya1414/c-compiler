@@ -1,7 +1,7 @@
 ### Parser
 
 program    = function*
-function   = declarator "{" compound_stmt
+function   = declspec declarator "{" compound_stmt
     declarator = "*" ident type-suffix
         type-suffix = ("(" func-params? ")")?
         func-params = param ("," param)"
@@ -28,3 +28,22 @@ unary      = ("+" | "-")? unary
 primary    = num 
              | ident func-args?
              | "(" expr ")"
+
+'int fib(int n) { if (n <= 1) { return n; } return fib(n - 1) + fib(n - 2); } int main() { return fib(10); }'
+
+
+program -> int fib(int n) { if (n <= 1) { return n; } return fib(n - 1) + fib(n - 2); } int main() { return fib(10); }
+    function -> int fib(int n) { if (n <= 1) { return n; } return fib(n - 1) + fib(n - 2); }
+        declspec -> int
+        declarator -> fib (int n)
+            ident typesuffix -> fib (int n)
+                "(" func-params ")" -> (int n)
+                    param -> int n
+                        declspec -> int
+                        declarator -> n
+                            ident -> n
+        "{"
+        compound_stmt
+            
+        
+    function

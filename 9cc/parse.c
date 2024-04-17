@@ -167,6 +167,7 @@ static Node *declaration() {
     return node;
 }
 
+// localsに関数の引数を渡す
 static void create_param_lvars(Type *param) {
     if (param) {
         create_param_lvars(param->next);
@@ -174,7 +175,7 @@ static void create_param_lvars(Type *param) {
     }
 }
 
-// function   = declarator "{" compound_stmt
+// function   = declspec declarator "{" compound_stmt
 Function *function() {
     Type *ty = declspec();
     ty = declarator(ty);
@@ -200,6 +201,7 @@ Node *compound_stmt() {
         } else {
             cur = cur->next = stmt();
         }
+        add_type(cur);
     }
     node->body = head.next;
     return node;
@@ -378,10 +380,10 @@ Node *unary() {
         return new_binary(ND_SUB, new_num(0), unary());
     }
     if (consume("*")) {
-        return new_binary(ND_DEREF, unary(), NULL);
+        return new_unary(ND_DEREF, unary());
     }
     if (consume("&")) {
-        return new_binary(ND_ADDR, unary(), NULL);
+        return new_unary(ND_ADDR, unary());
     }
     return primary();
 }

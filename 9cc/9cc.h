@@ -49,21 +49,21 @@ typedef enum {
     ND_MUL, // *
     ND_DIV, // /
     ND_EQ, // == 
-    ND_NE, // !=
+    ND_NE, // != :5
     ND_LT, // <
     ND_LE, // <=
     ND_ASSIGN, // =
-    ND_ADDR, // &
-    ND_DEREF, // *
+    ND_ADDR, // & 
+    ND_DEREF, // * :10
     ND_IF, // if
     ND_WHILE, // while
     ND_FOR, // for
-    ND_BLOCK, // block
-    ND_FUNCALL, // function call
+    ND_BLOCK, // block 
+    ND_FUNCALL, // function call :15
     ND_LVAR, // local variable
     ND_EXPR_STMT, // expression statement
     ND_RETURN, // return
-    ND_NUM, // Integer
+    ND_NUM, // Integer :20
 } NodeKind;
 
 typedef struct Node Node;
@@ -115,12 +115,13 @@ typedef enum {
 
 struct Type {
     TypeKind kind;
-    Type *base;
+    Type *base; // pointer
     Token *name;
 
-    Type *return_ty;
-    Type *params;
-    Type *next;
+    Type *return_ty; 
+    Type *params; 
+
+    Type *next; 
 };
 
 extern Type *ty_int;
