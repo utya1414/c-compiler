@@ -1,9 +1,14 @@
 #include"9cc.h"
 
 Type *ty_int = &(Type){TY_INT};
+Type *ty_pointer = &(Type){TY_PTR};
 
 bool is_integer(Type *ty) {
     return ty->kind == TY_INT;
+}
+
+bool is_pointer(Type *ty) {
+    return ty->kind == TY_PTR;
 }
 
 Type *pointer_to(Type *base) {

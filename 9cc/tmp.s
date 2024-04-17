@@ -35,12 +35,15 @@ main:
   mov rax, rbp
   sub rax, 8
   push rax
+# nd_lvar
   pop rax
   mov rax, [rax]
   push rax
+# nd_deref
   pop rax
   mov rax, [rax]
   push rax
+# nd_deref
   pop rax
   mov rax, [rax]
   push rax

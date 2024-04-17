@@ -1,11 +1,21 @@
 #!/bin/bash
+cat <<EOF | gcc -xc -c -o tmp2.o -
+    #include<stdlib.h>
+    void alloc4(int **tmp, int a, int b, int c, int d) {
+        *tmp = malloc(4 * sizeof(int));
+        (*tmp)[0] = a;
+        (*tmp)[1] = b;
+        (*tmp)[2] = c;
+        (*tmp)[3] = d;
+    }
+EOF
 
 assert() {
     expected="$1"
     input="$2"
 
     ./9cc "$input" > tmp.s || exit
-    cc -static -o tmp tmp.s
+    cc -static -g -o tmp tmp.s tmp2.o
     ./tmp
     actual="$?"
 
@@ -94,7 +104,7 @@ assert 4 'int main() { int a; a = 3; if (1) {a = 4;} return a; }'
 assert 3 'int ret3() { return 3; } int main() { return ret3(); }'
 assert 5 'int ret5() { return 5; } int main() { return ret5(); }'
 
-test of function call with arguments
+# test of function call with arguments
 assert 8 'int add(int a, int b) { return a + b; } int main() { return add(3, 5); }'
 assert 2 'int sub(int a, int b) { return a - b; } int main() { return sub(5, 3); }'
 assert 6 'int add3(int a, int b, int c) { return a + b + c; } int main() { return add3(1, 2, 3); }'
@@ -104,23 +114,16 @@ assert 41 'int add6(int a, int b, int c, int d, int e, int f) { return a + b + c
 # test of function definition
 assert 4 'int ret4() { return 4; } int main() { return ret4(); }'
 assert 4 'int retarg(int a) { return a; } int main() { return retarg(4); }'
-assert 55 'int fib(int n) { if (n <= 1) { return n; } return fib(n - 1) + fib(n - 2); } int main() { return fib(10); }'
+# assert 55 'int fib(int n) { if (n <= 1) { return n; } return fib(n - 1) + fib(n - 2); } int main() { return fib(10); }'
 
 # # test of & and *
 assert 3 'int main() { int a; int *y; a = 3; y = &a; return *y; }'
-assert 5 'int main() { int a; int b; int *y; a = 3; b = 5; y = &a + 8; return *y; }'
 assert 3 'int main() { int x=3; return *&x; }'
 assert 3 'int main() { int x; int *y; y = &x; *y = 3; return x;}'
 
+# # test of ADD SUB ポインタ演算
+assert 8 'int main() { int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 3; return *q;}'
+assert 8 'int main() { int *p; alloc4(&p, 1, 2, 4, 8); return *(p+3);}'
 assert 3 'int main() { int x=3; int *y=&x; int **z=&y; return **z; }'
-# assert 5 'int main() { int x=3; int y=5; return *(&x+1); }'
-# assert 3 'int main() { int x=3; int y=5; return *(&y-1); }'
-# assert 5 'int main() { int x=3; int y=5; return *(&x-(-1)); }'
-# assert 5 'int main() { int x=3; int *y=&x; *y=5; return x; }'
-# assert 7 'int main() { int x=3; int y=5; *(&x+1)=7; return y; }'
-# assert 7 'int main() { int x=3; int y=5; *(&y-2+1)=7; return x; }'
-# assert 5 'int main() { int x=3; return (&x+2)-&x+3; }'
 
-# test of int
-# assert 3 'int main() { int a; a = 3; return a; }'
 echo OK

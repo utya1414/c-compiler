@@ -63,7 +63,7 @@ typedef enum {
     ND_LVAR, // local variable
     ND_EXPR_STMT, // expression statement
     ND_RETURN, // return
-    ND_NUM, // Integer :20
+    ND_NUM, // Integer :19
 } NodeKind;
 
 typedef struct Node Node;
@@ -148,7 +148,8 @@ Token *tokenize();
 // Type 
 // 
 
-bool is_integre(Type *ty);
+bool is_integer(Type *ty);
+bool is_pointer(Type *ty);
 Type *pointer_to(Type *base);
 Type *copy_type(Type *ty);
 Type *func_type(Type *return_ty);

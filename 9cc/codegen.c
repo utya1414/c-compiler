@@ -26,6 +26,7 @@ void gen(Node *node) {
         return;
     case ND_LVAR:
         gen_lval(node);
+        printf("# nd_lvar\n");
         printf("  pop rax\n");
         printf("  mov rax, [rax]\n");
         printf("  push rax\n");
@@ -115,6 +116,7 @@ void gen(Node *node) {
         return;
     case ND_DEREF: 
         gen(node->lhs);
+        printf("# nd_deref\n");
         printf("  pop rax\n");
         printf("  mov rax, [rax]\n");
         printf("  push rax\n");

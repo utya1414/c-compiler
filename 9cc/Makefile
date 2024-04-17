@@ -1,4 +1,4 @@
-GFLAGS=-std=c11 -g -ggdb -static
+GFLAGS=-std=c11 -g -static
 SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=.o)
 
@@ -17,10 +17,9 @@ start:
 	docker start 3ee03c6933d6
 
 exec:
-		docker exec -it 3ee03c6933d6 /bin/bash
+	docker exec -it 3ee03c6933d6 /bin/bash
 
-gdb:
-	gcc -ggdb tmp.s -o tmp
-	gdb tmp
+gen_tmp:
+	gcc -g -static tmp.s tmp2.o -o tmp
 
-.PHONY: test clean exec start gdb
+.PHONY: test clean exec start gen_tmp

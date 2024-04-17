@@ -57,10 +57,26 @@ Node *new_binary(NodeKind kind, Node *lhs, Node *rhs) {
     return node;
 }
 
-Node *new_num(int val) {
-    Node *node = new_node(ND_NUM);
-    node->val = val;
-    return node;
+// ポインタの加算を区別して計算する
+Node *new_add(Node *lhs, Node *rhs) {
+    add_type(lhs);
+    add_type(rhs);
+    if (is_integer(lhs->ty) && is_integer(rhs->ty)) {
+        return new_binary(ND_ADD, lhs, rhs);
+    }
+
+    if (lhs->ty->base && rhs->ty->base) {
+        error("invalid pointer arithmetic");
+    }
+    // num + ptr
+    if (!lhs->ty->base && rhs->ty->base) {
+        Node *tmp = lhs;
+        lhs = rhs;
+        rhs = tmp;
+    }
+    // ptr + num int なら4倍する
+    rhs = new_binary(ND_MUL, rhs, new_num(4));
+    return new_binary(ND_ADD, lhs, rhs);
 }
 
 Node *new_unary(NodeKind kind, Node *lhs) {
@@ -68,6 +84,13 @@ Node *new_unary(NodeKind kind, Node *lhs) {
     node->lhs = lhs;
     return node;
 }
+
+Node *new_num(int val) {
+    Node *node = new_node(ND_NUM);
+    node->val = val;
+    return node;
+}
+
 
 Node *new_var_node(LVar *lvar) {
     Node *node = new_node(ND_LVAR);
@@ -345,7 +368,7 @@ Node *add() {
 
     for (;;) {
         if (consume("+")) {
-            node = new_binary(ND_ADD, node, mul());
+            node = new_add(node, mul());
         } else if (consume("-")) {
             node = new_binary(ND_SUB, node, mul());
         } else {
@@ -372,6 +395,7 @@ Node *mul() {
 // unary      = ("+" | "-")? unary
 //              | "*" unary
 //              | "&" unary
+//              | primary   
 Node *unary() {
     if (consume("+")) {
         return unary();
