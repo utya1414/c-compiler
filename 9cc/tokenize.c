@@ -134,6 +134,12 @@ Token *tokenize() {
             continue;
         }
 
+        if (startswith(p, "sizeof")) {
+            cur = new_token(TK_KEYWORD, cur, p, 6);
+            p += 6;
+            continue;
+        }
+
         if (isidentfirst(*p)) {
             char *start = p;
             do {

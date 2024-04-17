@@ -418,11 +418,21 @@ Node *mul() {
     }
 }
 
-// unary      = ("+" | "-")? unary
+// unary      = "sizeof" unary
+//              ("+" | "-")? unary
 //              | "*" unary
 //              | "&" unary
 //              | primary   
 Node *unary() {
+    if (consume_keyword("sizeof")) {
+        Node *node = unary();
+        add_type(node);
+        // pointer
+        if (node->ty->base) {
+            return new_num(8);
+        }
+        return new_num(4);
+    }
     if (consume("+")) {
         return unary();
     }

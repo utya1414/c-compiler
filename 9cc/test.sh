@@ -128,4 +128,8 @@ assert 3 'int main() { int x=3; int *y=&x; int **z=&y; return **z; }'
 assert 4 'int main() { int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 3; return *(q-1); }'
 assert 2 'int main() { int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 3; return *(q-2); }'
 
+# test of sizeof
+assert 4 'int main() { return sizeof(1); }'
+assert 4 'int main() { int x; return sizeof(x); }'
+assert 8 'int main() { int *x; return sizeof(x); }'
 echo OK
