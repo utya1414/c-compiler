@@ -79,6 +79,32 @@ Node *new_add(Node *lhs, Node *rhs) {
     return new_binary(ND_ADD, lhs, rhs);
 }
 
+Node *new_sub(Node *lhs, Node *rhs) {
+    add_type(lhs);
+    add_type(rhs);
+    if (is_integer(lhs->ty) && is_integer(rhs->ty)) {
+        return new_binary(ND_SUB, lhs, rhs);
+    }
+
+    // ptr - ptr, 二つのポインタの間に何個の要素があるか計算できる
+    if (lhs->ty->base && rhs->ty->base) {
+        Node *node = new_binary(ND_SUB, lhs, rhs);
+        node->ty = ty_int;
+        return new_binary(ND_DIV, node, new_num(4));
+    }
+
+    // ptr - num 新しい変数が生成される
+    if (lhs->ty->base && !rhs->ty->base) {
+        rhs = new_binary(ND_MUL, rhs, new_num(4));
+        add_type(rhs);
+        Node *node = new_binary(ND_SUB, lhs, rhs);
+        node->ty = lhs->ty;
+        return node;
+    }
+
+    error("invalid operands");
+}
+
 Node *new_unary(NodeKind kind, Node *lhs) {
     Node *node = new_node(kind);
     node->lhs = lhs;
@@ -370,7 +396,7 @@ Node *add() {
         if (consume("+")) {
             node = new_add(node, mul());
         } else if (consume("-")) {
-            node = new_binary(ND_SUB, node, mul());
+            node = new_sub(node, mul());
         } else {
             return node;
         }
