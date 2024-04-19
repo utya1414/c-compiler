@@ -171,7 +171,7 @@ Type *func_params(Type *ty) {
     return ty;
 }
 
-// type-suffix = ("[" num "]")?
+// type-suffix = | "[" num "]" type-suffix
 //               | ("(" func-params? ")")?
 static Type *type_suffix(Type *ty) {
     if (consume("(")) {
@@ -179,8 +179,9 @@ static Type *type_suffix(Type *ty) {
     }
     if (consume("[")) {
         int sz = expect_number();
-        ty = array_type(ty, sz);
         expect("]");
+        ty = type_suffix(ty);
+        ty = array_type(ty, sz);
         return ty;
     }
     return ty;
@@ -458,9 +459,8 @@ Node *unary() {
 Node *postfix() {
     Node *node = primary();
 
-
     // array access
-    if (consume("[")) {
+    while (consume("[")) {
         Node *idx = expr();
         expect("]");
         node = new_unary(ND_DEREF, new_add(node, idx));

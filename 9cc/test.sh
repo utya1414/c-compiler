@@ -137,7 +137,24 @@ assert() {
 # assert 1 'int main() { int x[2]; *x = 1; return *x; }'
 # assert 2 'int main() { int x[2]; *(x+1) = 2; return *(x+1); }'
 # assert 3 'int main() { int x[2]; *x = 1; *(x+1) = 2; int *p; p =x; return *p + *(p+1); }'
+
+# # test of multi-dimentional array
+assert 0 'int main() { int x[2][3]; int *y=x; *y=0; return **x; }'
+assert 1 'int main() { int x[2][3]; int *y=x; *(y+1)=1; return *(*x+1); }'
+assert 2 'int main() { int x[2][3]; int *y=x; *(y+2)=2; return *(*x+2); }'
+assert 3 'int main() { int x[2][3]; int *y=x; *(y+3)=3; return **(x+1); }'
+assert 4 'int main() { int x[2][3]; int *y=x; *(y+4)=4; return *(*(x+1)+1); }'
+assert 5 'int main() { int x[2][3]; int *y=x; *(y+5)=5; return *(*(x+1)+2); }'
+
+# test of index access
 assert 3 'int main() { int x[2]; x[0] = 1; x[1] = 2; return x[0] + x[1]; }'
 assert 3 'int main() { int x[2]; x[0] = 1; x[1] = 2; int *p; p = x; return *p + *(p+1); }'
+assert 0 'int main() { int x[2][3]; int *y=x; y[0]=0; return x[0][0]; }'
+assert 1 'int main() { int x[2][3]; int *y=x; y[1]=1; return x[0][1]; }'
+assert 2 'int main() { int x[2][3]; int *y=x; y[2]=2; return x[0][2]; }'
+assert 3 'int main() { int x[2][3]; int *y=x; y[3]=3; return x[1][0]; }'
+assert 4 'int main() { int x[2][3]; int *y=x; y[4]=4; return x[1][1]; }'
+assert 5 'int main() { int x[2][3]; int *y=x; y[5]=5; return x[1][2]; }'
+
 
 echo OK
