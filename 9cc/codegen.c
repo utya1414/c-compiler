@@ -19,6 +19,23 @@ static void pop(char *arg) {
     depth--;
 }
 
+void load(Type *ty) {
+    if (ty->kind == TY_ARRAY) {
+        return;
+    }
+    printf("  pop rax\n");
+    printf("  mov rax, [rax]\n");
+    printf("  push rax\n");
+    return;
+}
+
+void store(void) {
+    printf("  pop rdi\n");
+    printf("  pop rax\n");
+    printf("  mov [rax], rdi\n");
+    printf("  push rdi\n");
+}
+
 void gen(Node *node) {
     switch (node->kind) {
     case ND_NUM:
@@ -26,19 +43,12 @@ void gen(Node *node) {
         return;
     case ND_LVAR:
         gen_lval(node);
-        printf("# nd_lvar\n");
-        printf("  pop rax\n");
-        printf("  mov rax, [rax]\n");
-        printf("  push rax\n");
+        load(node->ty);
         return;
     case ND_ASSIGN:
         gen_lval(node->lhs);
         gen(node->rhs);
-
-        printf("  pop rdi\n");
-        printf("  pop rax\n");
-        printf("  mov [rax], rdi\n");
-        printf("  push rdi\n");
+        store();
         return;
     case ND_RETURN:
         gen(node->lhs);
@@ -116,10 +126,7 @@ void gen(Node *node) {
         return;
     case ND_DEREF: 
         gen(node->lhs);
-        printf("# nd_deref\n");
-        printf("  pop rax\n");
-        printf("  mov rax, [rax]\n");
-        printf("  push rax\n");
+        load(node->ty);
         return;
     case ND_EXPR_STMT:
         gen(node->lhs);
@@ -190,7 +197,7 @@ void assign_lvar_offsets(Function *fns) {
     for (Function *fn = fns; fn; fn = fn->next) {
         int offset = 0;
         for (LVar *lvar = fn->locals; lvar; lvar = lvar->next) {
-            offset += 8;
+            offset += lvar->ty->size;
             lvar->offset = offset;
         }
         fn->stack_size = offset;

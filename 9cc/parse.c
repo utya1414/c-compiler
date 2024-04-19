@@ -75,7 +75,7 @@ Node *new_add(Node *lhs, Node *rhs) {
         rhs = tmp;
     }
     // ptr + num int なら4倍する
-    rhs = new_binary(ND_MUL, rhs, new_num(4));
+    rhs = new_binary(ND_MUL, rhs, new_num(lhs->ty->base->size));
     return new_binary(ND_ADD, lhs, rhs);
 }
 
@@ -89,13 +89,13 @@ Node *new_sub(Node *lhs, Node *rhs) {
     // ptr - ptr, 二つのポインタの間に何個の要素があるか計算できる
     if (lhs->ty->base && rhs->ty->base) {
         Node *node = new_binary(ND_SUB, lhs, rhs);
-        node->ty = ty_int;
-        return new_binary(ND_DIV, node, new_num(4));
+        node->ty = int_type();
+        return new_binary(ND_DIV, node, new_num(lhs->ty->base->size));
     }
 
     // ptr - num 新しい変数が生成される
     if (lhs->ty->base && !rhs->ty->base) {
-        rhs = new_binary(ND_MUL, rhs, new_num(4));
+        rhs = new_binary(ND_MUL, rhs, new_num(lhs->ty->base->size));
         add_type(rhs);
         Node *node = new_binary(ND_SUB, lhs, rhs);
         node->ty = lhs->ty;
@@ -150,27 +150,38 @@ static Type *declspec() {
         error_at(token->str, "expected int");
     }
     token = token->next;
-    return ty_int;
+    return int_type();
 }
 
-// type-suffix = ("(" func-params? ")")?
 // func-params = param ("," param)"
 // param = declspec declarator
+Type *func_params(Type *ty) {
+    Type head = {};
+    Type *cur = &head;
+    while (!consume(")")) {
+        if (cur != &head) {
+            expect(",");
+        }
+        Type *basety = declspec();
+        Type *ty = declarator(basety);
+        cur = cur->next = copy_type(ty);
+    }
+
+    ty = func_type(ty);
+    ty->params = head.next;
+    return ty;
+}
+
+// type-suffix = ("[" num "]")?
+//               | ("(" func-params? ")")?
 static Type *type_suffix(Type *ty) {
     if (consume("(")) {
-        Type head = {};
-        Type *cur = &head;
-        while (!consume(")")) {
-            if (cur != &head) {
-                expect(",");
-            }
-            Type *basety = declspec();
-            Type *ty = declarator(basety);
-            cur = cur->next = copy_type(ty);
-        }
-
-        ty = func_type(ty);
-        ty->params = head.next;
+        return func_params(ty);
+    }
+    if (consume("[")) {
+        int sz = expect_number();
+        ty = array_type(ty, sz);
+        expect("]");
         return ty;
     }
     return ty;
@@ -427,11 +438,7 @@ Node *unary() {
     if (consume_keyword("sizeof")) {
         Node *node = unary();
         add_type(node);
-        // pointer
-        if (node->ty->base) {
-            return new_num(8);
-        }
-        return new_num(4);
+        return new_num(node->ty->size);
     }
     if (consume("+")) {
         return unary();
