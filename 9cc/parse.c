@@ -123,10 +123,9 @@ Node *new_var_node(Obj *lvar) {
     return node;
 }
 
-Obj *new_lvar(char *name, int len, Type *ty) {
+Obj *new_lvar(char *name, Type *ty) {
     Obj *lvar = calloc(1, sizeof(Obj));
     lvar->name = name;
-    lvar->len = len;
     lvar->ty = ty;
     lvar->next = locals;
     locals = lvar;
@@ -135,7 +134,7 @@ Obj *new_lvar(char *name, int len, Type *ty) {
 
 Obj *find_lvar(Token *tok) {
     for (Obj *lvar = locals; lvar; lvar = lvar->next) {
-        if (lvar->len == tok->len && !memcmp(tok->str, lvar->name, lvar->len)) {
+        if (strlen(lvar->name) == tok->len && !memcmp(tok->str, lvar->name, tok->len)) {
             return lvar;
         }
     }
@@ -213,7 +212,7 @@ static Node *declaration() {
             expect(",");
         }
         Type *ty = declarator(basety);
-        Obj *lvar = new_lvar(get_ident(ty->name), ty->name->len, ty);
+        Obj *lvar = new_lvar(get_ident(ty->name), ty);
         if (!consume("=")) {
            continue;
         }
@@ -230,7 +229,7 @@ static Node *declaration() {
 static void create_param_lvars(Type *param) {
     if (param) {
         create_param_lvars(param->next);
-        Obj *lvar = new_lvar(get_ident(param->name), param->name->len, param);
+        Obj *lvar = new_lvar(get_ident(param->name), param);
     }
 }
 

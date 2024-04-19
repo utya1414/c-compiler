@@ -63,7 +63,6 @@ struct Obj {
     Type *ty;    
     bool is_local;
     int offset; // Local variable
-    int len; // variable name length
     bool is_function; // Grobal or function
 
     Obj *next;
