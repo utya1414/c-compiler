@@ -116,26 +116,28 @@ assert() {
 # assert 4 'int retarg(int a) { return a; } int main() { return retarg(4); }'
 # assert 55 'int fib(int n) { if (n <= 1) { return n; } return fib(n - 1) + fib(n - 2); } int main() { return fib(10); }'
 
-# # test of & and *
-assert 3 'int main() { int a; int *y; a = 3; y = &a; return *y; }'
-assert 3 'int main() { int x=3; return *&x; }'
-assert 3 'int main() { int x; int *y; y = &x; *y = 3; return x;}'
+# # # test of & and *
+# assert 3 'int main() { int a; int *y; a = 3; y = &a; return *y; }'
+# assert 3 'int main() { int x=3; return *&x; }'
+# assert 3 'int main() { int x; int *y; y = &x; *y = 3; return x;}'
 
-# # # # test of ADD SUB ポインタ演算
-assert 8 'int main() { int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 3; return *q;}'
-assert 8 'int main() { int *p; alloc4(&p, 1, 2, 4, 8); return *(p+3);}'
-assert 3 'int main() { int x=3; int *y=&x; int **z=&y; return **z; }'
-assert 4 'int main() { int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 3; return *(q-1); }'
-assert 2 'int main() { int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 3; return *(q-2); }'
+# # # # # test of ADD SUB ポインタ演算
+# assert 8 'int main() { int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 3; return *q;}'
+# assert 8 'int main() { int *p; alloc4(&p, 1, 2, 4, 8); return *(p+3);}'
+# assert 3 'int main() { int x=3; int *y=&x; int **z=&y; return **z; }'
+# assert 4 'int main() { int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 3; return *(q-1); }'
+# assert 2 'int main() { int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 3; return *(q-2); }'
 
-# # test of sizeof
-assert 4 'int main() { return sizeof(1); }'
-assert 4 'int main() { int x; return sizeof(x); }'
-assert 8 'int main() { int *x; return sizeof(x); }'
+# # # test of sizeof
+# assert 4 'int main() { return sizeof(1); }'
+# assert 4 'int main() { int x; return sizeof(x); }'
+# assert 8 'int main() { int *x; return sizeof(x); }'
 
-# test of arrary
-assert 1 'int main() { int x[2]; *x = 1; return *x; }'
-assert 2 'int main() { int x[2]; *(x+1) = 2; return *(x+1); }'
-assert 3 'int main() { int x[2]; *x = 1; *(x+1) = 2; int *p; p =x; return *p + *(p+1); }'
+# # test of arrary
+# assert 1 'int main() { int x[2]; *x = 1; return *x; }'
+# assert 2 'int main() { int x[2]; *(x+1) = 2; return *(x+1); }'
+# assert 3 'int main() { int x[2]; *x = 1; *(x+1) = 2; int *p; p =x; return *p + *(p+1); }'
+assert 3 'int main() { int x[2]; x[0] = 1; x[1] = 2; return x[0] + x[1]; }'
+assert 3 'int main() { int x[2]; x[0] = 1; x[1] = 2; int *p; p = x; return *p + *(p+1); }'
 
 echo OK

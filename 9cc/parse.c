@@ -166,7 +166,6 @@ Type *func_params(Type *ty) {
         Type *ty = declarator(basety);
         cur = cur->next = copy_type(ty);
     }
-
     ty = func_type(ty);
     ty->params = head.next;
     return ty;
@@ -433,7 +432,7 @@ Node *mul() {
 //              ("+" | "-")? unary
 //              | "*" unary
 //              | "&" unary
-//              | primary   
+//              | postfix
 Node *unary() {
     if (consume_keyword("sizeof")) {
         Node *node = unary();
@@ -452,11 +451,26 @@ Node *unary() {
     if (consume("&")) {
         return new_unary(ND_ADDR, unary());
     }
-    return primary();
+    return postfix();
+}
+
+// postfix = primary ("[ expr "]")*
+Node *postfix() {
+    Node *node = primary();
+
+
+    // array access
+    if (consume("[")) {
+        Node *idx = expr();
+        expect("]");
+        node = new_unary(ND_DEREF, new_add(node, idx));
+    }
+    return node;
 }
 
 // primary    = num 
 //              | ident func-args?
+//              | ident "[" primary "]"
 //              | "(" expr ")"
 Node *primary() {
     if (consume("(")) {
@@ -481,7 +495,7 @@ Node *primary() {
             }
             return node;
         }
-        
+
         LVar *lvar = find_lvar(tok);
        if (!lvar) {
             error("undefined variable");
