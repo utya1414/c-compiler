@@ -2,7 +2,7 @@
 
 static int depth;
 static char *argreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
-static Function *current_fn;
+static Obj *current_fn;
 
 static int count(void) {
     static int i = 1;
@@ -193,10 +193,10 @@ void gen_lval(Node *node) {
 }
 
 // ローカル変数はあらかじめスタックにpushされる
-void assign_lvar_offsets(Function *fns) {
-    for (Function *fn = fns; fn; fn = fn->next) {
+void assign_lvar_offsets(Obj *fns) {
+    for (Obj *fn = fns; fn; fn = fn->next) {
         int offset = 0;
-        for (LVar *lvar = fn->locals; lvar; lvar = lvar->next) {
+        for (Obj *lvar = fn->locals; lvar; lvar = lvar->next) {
             offset += lvar->ty->size;
             lvar->offset = offset;
         }
@@ -204,12 +204,12 @@ void assign_lvar_offsets(Function *fns) {
     }
 }
 
-void codegen(Function *fns) {
+void codegen(Obj *fns) {
     // アセンブリの前半部分を出力
     printf(".intel_syntax noprefix\n");
 
     assign_lvar_offsets(fns);
-    for (Function *fn = fns; fn; fn = fn->next) {        
+    for (Obj *fn = fns; fn; fn = fn->next) {        
         current_fn = fn;
         printf(".global %s\n", fn->name);
         printf("%s:\n", fn->name);
@@ -218,7 +218,7 @@ void codegen(Function *fns) {
         printf("  sub rsp, %d\n", fn->stack_size);
 
         int i = 0;
-        for (LVar *lvar = fn->params; lvar; lvar = lvar->next) {
+        for (Obj *lvar = fn->params; lvar; lvar = lvar->next) {
             printf("  mov [rbp-%d], %s\n", lvar->offset, argreg[i++]);
         }
         gen(fn->body);

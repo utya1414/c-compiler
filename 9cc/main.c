@@ -2,7 +2,7 @@
 
 char *user_input;
 Token *token;
-LVar *locals;
+Obj *locals;
 
 int main(int argc, char **argv) {
     if (argc != 2) {
@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
 
     user_input = argv[1];
     token = tokenize();
-    Function *fns = program();
+    Obj *fns = program();
 
     codegen(fns);
     return 0;

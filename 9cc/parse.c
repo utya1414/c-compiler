@@ -117,15 +117,14 @@ Node *new_num(int val) {
     return node;
 }
 
-
-Node *new_var_node(LVar *lvar) {
+Node *new_var_node(Obj *lvar) {
     Node *node = new_node(ND_LVAR);
     node->lvar = lvar;
     return node;
 }
 
-LVar *new_lvar(char *name, int len, Type *ty) {
-    LVar *lvar = calloc(1, sizeof(LVar));
+Obj *new_lvar(char *name, int len, Type *ty) {
+    Obj *lvar = calloc(1, sizeof(Obj));
     lvar->name = name;
     lvar->len = len;
     lvar->ty = ty;
@@ -134,8 +133,8 @@ LVar *new_lvar(char *name, int len, Type *ty) {
     return lvar;
 }
 
-LVar *find_lvar(Token *tok) {
-    for (LVar *lvar = locals; lvar; lvar = lvar->next) {
+Obj *find_lvar(Token *tok) {
+    for (Obj *lvar = locals; lvar; lvar = lvar->next) {
         if (lvar->len == tok->len && !memcmp(tok->str, lvar->name, lvar->len)) {
             return lvar;
         }
@@ -214,7 +213,7 @@ static Node *declaration() {
             expect(",");
         }
         Type *ty = declarator(basety);
-        LVar *lvar = new_lvar(get_ident(ty->name), ty->name->len, ty);
+        Obj *lvar = new_lvar(get_ident(ty->name), ty->name->len, ty);
         if (!consume("=")) {
            continue;
         }
@@ -231,16 +230,16 @@ static Node *declaration() {
 static void create_param_lvars(Type *param) {
     if (param) {
         create_param_lvars(param->next);
-        LVar *lvar = new_lvar(get_ident(param->name), param->name->len, param);
+        Obj *lvar = new_lvar(get_ident(param->name), param->name->len, param);
     }
 }
 
 // function   = declspec declarator "{" compound_stmt
-Function *function() {
+Obj *function() {
     Type *ty = declspec();
     ty = declarator(ty);
     locals = NULL;
-    Function *fn = calloc(1, sizeof(Function));
+    Obj *fn = calloc(1, sizeof(Obj));
     fn->name = get_ident(ty->name);
     create_param_lvars(ty->params);
     fn->params = locals;
@@ -269,9 +268,9 @@ Node *compound_stmt() {
 
 // プログラムは関数のリスト
 // program    = function*
-Function *program() {
-    Function head = {};
-    Function *cur = &head;
+Obj *program() {
+    Obj head = {};
+    Obj *cur = &head;
     while (!at_eof()) {
         cur = cur->next = function();
     }
@@ -496,7 +495,7 @@ Node *primary() {
             return node;
         }
 
-        LVar *lvar = find_lvar(tok);
+        Obj *lvar = find_lvar(tok);
        if (!lvar) {
             error("undefined variable");
         }

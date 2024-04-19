@@ -29,19 +29,6 @@ struct Token {
     int len;
 };
 
-// local variable
-typedef struct LVar LVar;
-
-struct LVar {
-    LVar *next;
-    char *name;
-    Type *ty;
-    int len;
-    int offset;
-};
-
-extern LVar *locals;
-
 // node kind
 typedef enum {
     ND_ADD, // +
@@ -68,6 +55,26 @@ typedef enum {
 
 typedef struct Node Node;
 
+// variable or function
+typedef struct Obj Obj;
+
+struct Obj {
+    char *name;
+    Type *ty;    
+    bool is_local;
+    int offset; // Local variable
+    int len; // variable name length
+    bool is_function; // Grobal or function
+
+    Obj *next;
+    Obj *params;
+    Node *body;
+    Obj *locals;
+    int stack_size;
+};
+
+extern Obj *locals;
+
 struct Node {
     NodeKind kind;
     Node *lhs;
@@ -92,19 +99,9 @@ struct Node {
     Node *args;
 
     // local variable
-    LVar *lvar;
+    Obj *lvar;
     int val;
     int offset;
-};
-
-typedef struct Function Function;
-struct Function {
-    Function *next;
-    char *name;
-    LVar *params;
-    Node *body;
-    LVar *locals;
-    int stack_size;
 };
 
 typedef enum {
@@ -169,7 +166,7 @@ void add_type(Node *node);
 Node *new_node(NodeKind kind);
 Node *new_binary(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_num(int val);
-LVar *find_lvar(Token *tok);
+Obj *find_lvar(Token *tok);
 
 static Type *type_suffix(Type *ty);
 static Type *declspec();
@@ -177,7 +174,7 @@ static Node *declaration();
 static Type *declarator(Type *ty);
 Node *expr_stmt();
 Node *compound_stmt();
-Function *program();
+Obj *program();
 Node *stmt();
 Node *expr();
 Node *assign();
@@ -195,6 +192,6 @@ Node *primary();
 
 void gen(Node *node);
 void gen_lval(Node *node);
-void codegen(Function *fns);
+void codegen(Obj *fns);
 
 int foo();

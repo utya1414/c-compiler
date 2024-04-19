@@ -1,6 +1,6 @@
 #include"9cc.h"
 
-Type *ty_int = &(Type){TY_INT, 4};
+Type *ty_int = &(Type){TY_INT, 8};
 Type *ty_pointer = &(Type){TY_PTR, 8};
 
 bool is_integer(Type *ty) {
